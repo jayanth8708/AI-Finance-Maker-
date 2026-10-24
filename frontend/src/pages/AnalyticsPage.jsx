@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend, LineChart, Line
 } from 'recharts'
+import { UploadCloud } from 'lucide-react'
 import api from '../lib/api'
 import { formatCurrency, formatMonth, getCategoryColor } from '../lib/utils'
-import { MOCK_SUMMARY, MOCK_MONTHLY_TRENDS, MOCK_CATEGORY_BREAKDOWN } from '../data/mockData'
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -22,10 +23,11 @@ const ChartTooltip = ({ active, payload, label }) => {
 }
 
 export default function AnalyticsPage() {
-  const [summary, setSummary] = useState(MOCK_SUMMARY)
-  const [trends, setTrends] = useState(MOCK_MONTHLY_TRENDS)
-  const [categories, setCategories] = useState(MOCK_CATEGORY_BREAKDOWN)
-  const [usingMock, setUsingMock] = useState(true)
+  const [summary, setSummary]     = useState(null)
+  const [trends, setTrends]       = useState([])
+  const [categories, setCategories] = useState([])
+  const [hasData, setHasData]     = useState(null)
+  const [loading, setLoading]     = useState(true)
 
   useEffect(() => {
     const load = async () => {
@@ -35,16 +37,57 @@ export default function AnalyticsPage() {
           api.get('/analytics/monthly-trends?months=6'),
           api.get('/analytics/category-breakdown'),
         ])
-        if (s.data) { setSummary(s.data); setUsingMock(false) }
-        if (t.data?.length) setTrends(t.data)
-        if (c.data?.length) setCategories(c.data)
-      } catch { /* fall back to mock */ }
+        const hasTx = (s.data?.total_income > 0) || (s.data?.total_expense > 0)
+        setHasData(hasTx)
+        if (hasTx) {
+          setSummary(s.data)
+          if (t.data?.length) setTrends(t.data)
+          if (c.data?.length) setCategories(c.data)
+        }
+      } catch {
+        setHasData(false)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
 
-  const savingsRate = summary.total_income > 0
+  const savingsRate = summary && summary.total_income > 0
     ? Math.round((summary.net_savings / summary.total_income) * 100) : 0
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="spinner w-8 h-8" />
+      </div>
+    )
+  }
+
+  if (!hasData) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+          <p className="text-gray-500 text-sm">Understand your financial patterns</p>
+        </div>
+        <div className="card p-14 flex flex-col items-center text-center gap-4 border-2 border-dashed border-gray-200">
+          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center">
+            <UploadCloud size={32} className="text-gray-400" />
+          </div>
+          <div>
+            <p className="font-semibold text-gray-700 text-lg">No data to analyze yet</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Upload your bank statement to see income vs expense charts, category breakdowns, and savings trends.
+            </p>
+          </div>
+          <Link to="/upload" className="btn-primary flex items-center gap-2 mt-1">
+            <UploadCloud size={16} /> Upload Statement
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -53,7 +96,6 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
           <p className="text-gray-500 text-sm">Understand your financial patterns</p>
         </div>
-        {usingMock && <span className="badge-yellow text-xs">Demo data</span>}
       </div>
 
       {/* Summary cards */}

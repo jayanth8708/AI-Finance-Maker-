@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, TrendingUp, Check, X } from 'lucide-react'
 import api from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 
 function PasswordRule({ met, text }) {
   return (
@@ -14,6 +15,7 @@ function PasswordRule({ met, text }) {
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const { refreshUser } = useAuth()
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm_password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -42,17 +44,19 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await api.post('/auth/register', {
+      await api.post('/auth/register', {
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         password: form.password,
         confirm_password: form.confirm_password,
       })
-      navigate('/verify-email', {
-        state: { email: form.email.trim().toLowerCase(), maskedEmail: data.masked_email },
-      })
+      // Registration now logs the user in directly — refresh auth state and go to dashboard
+      await refreshUser()
+      navigate('/dashboard', { replace: true })
     } catch (err) {
-      setError(err.message || 'Registration failed')
+      // Strip Pydantic v2's "Value error, " prefix from validation messages
+      const raw = err.message || 'Registration failed'
+      setError(raw.replace(/Value error,\s*/gi, ''))
     } finally {
       setLoading(false)
     }

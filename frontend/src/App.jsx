@@ -7,8 +7,6 @@ import { AppLayout } from './components/AppLayout'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
-import VerifyEmailPage from './pages/VerifyEmailPage'
-import VerifyLoginOTPPage from './pages/VerifyLoginOTPPage'
 import DashboardPage from './pages/DashboardPage'
 import TransactionsPage from './pages/TransactionsPage'
 import AnalyticsPage from './pages/AnalyticsPage'
@@ -17,6 +15,7 @@ import AdvisorPage from './pages/AdvisorPage'
 import ReportsPage from './pages/ReportsPage'
 import StatementsPage from './pages/StatementsPage'
 import SettingsPage from './pages/SettingsPage'
+import UploadStatementPage from './pages/UploadStatementPage'
 
 function AppRoutes() {
   return (
@@ -25,11 +24,10 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/verify-login-otp" element={<VerifyLoginOTPPage />} />
 
       {/* Protected (with app shell) */}
       <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/upload" element={<ProtectedRoute><AppLayout><UploadStatementPage /></AppLayout></ProtectedRoute>} />
       <Route path="/transactions" element={<ProtectedRoute><AppLayout><TransactionsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/budgets" element={<ProtectedRoute><AppLayout><BudgetsPage /></AppLayout></ProtectedRoute>} />

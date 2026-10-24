@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   const fetchMe = useCallback(async () => {
+    setLoading(true)
     try {
       const { data } = await api.get('/auth/me')
       setUser(data)

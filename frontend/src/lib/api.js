@@ -13,11 +13,21 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error?.response?.data?.detail ||
-      error?.response?.data?.message ||
-      error?.message ||
-      'An unexpected error occurred'
+    const detail = error?.response?.data?.detail
+
+    let message
+    if (Array.isArray(detail)) {
+      // FastAPI / Pydantic validation errors: detail is an array of { msg, loc, ... }
+      message = detail.map((e) => e.msg || String(e)).join('. ')
+    } else if (typeof detail === 'string') {
+      message = detail
+    } else {
+      message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'An unexpected error occurred'
+    }
+
     return Promise.reject(new Error(message))
   }
 )

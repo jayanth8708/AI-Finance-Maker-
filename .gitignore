@@ -1,22 +1,39 @@
-# Environment secrets
-.env
-.env.*
-!.env.example
-
-# Node.js
-node_modules/
-dist/
-dist-ssr/
-
 # Python
-.venv/
-venv/
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# Logs
-*.log
+# Environment
+.env
+*.env.local
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Frontend build
+frontend/dist/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

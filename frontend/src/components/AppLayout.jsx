@@ -3,13 +3,14 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, ArrowLeftRight, BarChart3, PiggyBank,
   MessageSquare, FileText, FileSpreadsheet, Settings,
-  TrendingUp, LogOut, Menu, X, ChevronRight
+  TrendingUp, LogOut, Menu, X, ChevronRight, UploadCloud
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { getInitials } from '../lib/utils'
 
 const NAV_ITEMS = [
   { to: '/dashboard',     icon: LayoutDashboard,  label: 'Dashboard' },
+  { to: '/upload',        icon: UploadCloud,       label: 'Upload Statement' },
   { to: '/transactions',  icon: ArrowLeftRight,    label: 'Transactions' },
   { to: '/analytics',     icon: BarChart3,         label: 'Analytics' },
   { to: '/budgets',       icon: PiggyBank,         label: 'Budgets' },

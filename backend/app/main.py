@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 import logging
 
 from app.core.config import settings
-from app.routers import auth, transactions, budgets, analytics, users
+from app.routers import auth, transactions, budgets, analytics, users, upload
 
 # Logging
 logging.basicConfig(
@@ -24,7 +24,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="AI Finance Maker API",
-    description="Personal finance API with real OTP authentication",
+    description="Personal finance API with JWT authentication",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -34,10 +34,27 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS
+# CORS — in development allow any localhost port (so port conflicts like 5173→5174 never break things)
+import re as _re
+
+def _build_cors_origins() -> list[str]:
+    origins = [settings.FRONTEND_URL]
+    if settings.ENVIRONMENT != "production":
+        # Allow all localhost / 127.0.0.1 ports during development
+        origins += [
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:5175",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5174",
+            "http://127.0.0.1:3000",
+        ]
+    return list(dict.fromkeys(origins))  # deduplicate, preserve order
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=_build_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,6 +66,7 @@ app.include_router(transactions.router)
 app.include_router(budgets.router)
 app.include_router(analytics.router)
 app.include_router(users.router)
+app.include_router(upload.router)
 
 
 @app.get("/health")

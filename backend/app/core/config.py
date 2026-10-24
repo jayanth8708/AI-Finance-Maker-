@@ -1,5 +1,11 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from pathlib import Path
+
+# Resolve .env: prefer backend/.env, fall back to project-root .env
+_here = Path(__file__).resolve().parent  # app/core/
+_backend_env = _here.parent.parent / ".env"       # backend/.env
+_root_env = _here.parent.parent.parent / ".env"   # project-root .env
+_env_file = str(_backend_env) if _backend_env.exists() else str(_root_env)
 
 
 class Settings(BaseSettings):
@@ -15,22 +21,12 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440  # 24 hours
 
-    # Email
-    RESEND_API_KEY: str = ""
-    FROM_EMAIL: str = "noreply@example.com"
-    FROM_NAME: str = "AI Finance Maker"
-
     # App
     FRONTEND_URL: str = "http://localhost:5173"
     ENVIRONMENT: str = "development"
 
-    # OTP
-    OTP_EXPIRE_MINUTES: int = 5
-    OTP_MAX_ATTEMPTS: int = 5
-    OTP_RESEND_COOLDOWN_SECONDS: int = 60
-
     class Config:
-        env_file = ".env"
+        env_file = _env_file
         env_file_encoding = "utf-8"
         extra = "ignore"
 

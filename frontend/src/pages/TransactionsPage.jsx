@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import {
-  Search, Filter, Plus, Pencil, Trash2,
+  Search, Plus, Pencil, Trash2, UploadCloud,
   TrendingUp, TrendingDown, ChevronLeft, ChevronRight, X
 } from 'lucide-react'
 import api from '../lib/api'
 import { formatCurrency, formatDate, downloadFile, transactionsToCSV } from '../lib/utils'
-import { MOCK_TRANSACTIONS, CATEGORIES } from '../data/mockData'
+import { CATEGORIES } from '../data/mockData'
 
 const EMPTY_FORM = {
   title: '', amount: '', type: 'expense', category: '', description: '', date: ''
@@ -109,7 +110,6 @@ export default function TransactionsPage() {
   const [sortBy, setSortBy] = useState('date')
   const [sortDir, setSortDir] = useState('desc')
   const [loading, setLoading] = useState(false)
-  const [usingMock, setUsingMock] = useState(false)
   const [modal, setModal] = useState(null) // null | 'add' | transaction object
   const [deleteId, setDeleteId] = useState(null)
 
@@ -120,22 +120,12 @@ export default function TransactionsPage() {
       if (search) params.set('search', search)
       if (typeFilter) params.set('type', typeFilter)
       const { data } = await api.get(`/transactions?${params}`)
-      if (data.total === 0 && !search && !typeFilter) {
-        // No real data, show mock
-        setTransactions(MOCK_TRANSACTIONS.slice(0, 15))
-        setTotal(MOCK_TRANSACTIONS.length)
-        setPages(Math.ceil(MOCK_TRANSACTIONS.length / 15))
-        setUsingMock(true)
-      } else {
-        setTransactions(data.data)
-        setTotal(data.total)
-        setPages(data.pages)
-        setUsingMock(false)
-      }
+      setTransactions(data.data)
+      setTotal(data.total)
+      setPages(data.pages)
     } catch {
-      setTransactions(MOCK_TRANSACTIONS.slice(0, 15))
-      setTotal(MOCK_TRANSACTIONS.length)
-      setUsingMock(true)
+      setTransactions([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -188,11 +178,7 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {usingMock && (
-        <div className="alert-info text-xs">
-          Showing demo data. Add your first transaction to get started.
-        </div>
-      )}
+
 
       {/* Filters */}
       <div className="card p-4 flex flex-wrap gap-3">
@@ -228,7 +214,29 @@ export default function TransactionsPage() {
             <div className="spinner w-7 h-7" />
           </div>
         ) : transactions.length === 0 ? (
-          <div className="text-center py-16 text-gray-400 text-sm">No transactions found.</div>
+          <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <UploadCloud size={28} className="text-gray-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-600">
+                {search || typeFilter ? 'No transactions match your filters.' : 'No transactions yet'}
+              </p>
+              {!search && !typeFilter && (
+                <p className="text-sm text-gray-400 mt-1">Upload a bank statement or add one manually.</p>
+              )}
+            </div>
+            {!search && !typeFilter && (
+              <div className="flex gap-2">
+                <Link to="/upload" className="btn-primary btn-sm flex items-center gap-1.5">
+                  <UploadCloud size={13} /> Upload Statement
+                </Link>
+                <button onClick={() => setModal('add')} className="btn-secondary btn-sm flex items-center gap-1.5">
+                  <Plus size={13} /> Add Manually
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <table className="data-table">
             <thead>

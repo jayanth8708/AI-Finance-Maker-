@@ -6,12 +6,11 @@ import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { setUser } = useAuth()
+  const { refreshUser } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [needsVerification, setNeedsVerification] = useState(false)
 
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
@@ -27,21 +26,14 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await api.post('/auth/login', {
+      await api.post('/auth/login', {
         email: form.email.trim().toLowerCase(),
         password: form.password,
       })
-      navigate('/verify-login-otp', {
-        state: { email: form.email.trim().toLowerCase(), maskedEmail: data.masked_email },
-      })
+      await refreshUser()
+      navigate('/dashboard', { replace: true })
     } catch (err) {
-      const msg = err.message || 'Login failed'
-      if (msg.includes('not verified') || msg.includes('verify')) {
-        setNeedsVerification(true)
-        setError('Please verify your email before signing in.')
-      } else {
-        setError(msg)
-      }
+      setError(err.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -60,20 +52,7 @@ export default function LoginPage() {
         </div>
 
         <div className="card p-8">
-          {error && (
-            <div className="alert-error mb-5">
-              {error}
-              {needsVerification && (
-                <Link
-                  to="/verify-email"
-                  state={{ email: form.email }}
-                  className="block mt-1.5 underline font-medium"
-                >
-                  Verify email now
-                </Link>
-              )}
-            </div>
-          )}
+          {error && <div className="alert-error mb-5">{error}</div>}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             <div>
@@ -95,9 +74,6 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="password" className="label mb-0">Password</label>
-                <Link to="/forgot-password" className="text-xs text-primary-600 hover:text-primary-700 font-medium">
-                  Forgot password?
-                </Link>
               </div>
               <div className="relative">
                 <input

@@ -18,27 +18,11 @@ CREATE TABLE IF NOT EXISTS users (
     name        VARCHAR(100)     NOT NULL,
     email       VARCHAR(255)     NOT NULL UNIQUE,
     password_hash VARCHAR(255)   NOT NULL,
-    is_verified BOOLEAN          NOT NULL DEFAULT FALSE,
+    is_verified BOOLEAN          NOT NULL DEFAULT TRUE,
     is_active   BOOLEAN          NOT NULL DEFAULT TRUE,
     created_at  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- OTP challenges table
-CREATE TABLE IF NOT EXISTS otp_challenges (
-    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id         INT UNSIGNED     NOT NULL,
-    otp_type        ENUM('email_verification','login') NOT NULL,
-    otp_hash        VARCHAR(255)     NOT NULL,
-    expires_at      DATETIME         NOT NULL,
-    attempts        TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    is_used         BOOLEAN          NOT NULL DEFAULT FALSE,
-    last_sent_at    DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at      DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_type (user_id, otp_type),
-    INDEX idx_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Transactions table
@@ -90,10 +74,12 @@ def init_db():
             )
             cursor.execute(f"USE `{settings.DB_NAME}`")
 
-            # Execute each statement
+            # Execute each statement, stripping leading comment lines
             for statement in SCHEMA_SQL.split(";"):
-                stmt = statement.strip()
-                if stmt and not stmt.startswith("--"):
+                # Remove comment-only lines and surrounding whitespace
+                lines = [ln for ln in statement.splitlines() if not ln.strip().startswith("--")]
+                stmt = "\n".join(lines).strip()
+                if stmt:
                     cursor.execute(stmt)
 
         conn.commit()

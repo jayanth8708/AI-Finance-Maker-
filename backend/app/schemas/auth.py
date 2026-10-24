@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
-from typing import Optional
 import re
 
 
@@ -39,47 +38,9 @@ class RegisterRequest(BaseModel):
         return self
 
 
-class VerifyEmailRequest(BaseModel):
-    email: EmailStr
-    otp: str
-
-    @field_validator("otp")
-    @classmethod
-    def otp_format(cls, v: str) -> str:
-        v = v.strip()
-        if not re.match(r"^\d{6}$", v):
-            raise ValueError("OTP must be exactly 6 digits")
-        return v
-
-
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
-
-class VerifyLoginOTPRequest(BaseModel):
-    email: EmailStr
-    otp: str
-
-    @field_validator("otp")
-    @classmethod
-    def otp_format(cls, v: str) -> str:
-        v = v.strip()
-        if not re.match(r"^\d{6}$", v):
-            raise ValueError("OTP must be exactly 6 digits")
-        return v
-
-
-class ResendOTPRequest(BaseModel):
-    email: EmailStr
-    otp_type: str  # 'email_verification' or 'login'
-
-    @field_validator("otp_type")
-    @classmethod
-    def valid_type(cls, v: str) -> str:
-        if v not in ("email_verification", "login"):
-            raise ValueError("Invalid OTP type")
-        return v
 
 
 class UserOut(BaseModel):
